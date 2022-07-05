@@ -3,7 +3,7 @@ import numpy as np
 import requests
 import multitasking
 import datetime
-from pandas_datareader import data as pdr
+#from pandas_datareader import data as pdr
 import yfinance as yf
 import pymongo as pym
 from pymongo import MongoClient
@@ -15,28 +15,50 @@ client = MongoClient(cluster)
 print(client.list_database_names())
 ### Accessing a database:
 db = client.test
+col = db.data
 print(db.list_collection_names())
+print(db["data"])
+print(col)
+### Count times of TSLA apperence in database:
+isthere = col.count_documents({"symbol": "TSLA"})
+print(isthere)
+### Print all documents
+allmydocs = col.find()
+for x in allmydocs:
+        print(x)
+print("********")
+### Print the last item (newest) and than print all documents in descending order
+mydoc = col.find().sort("EndDate", -1)
+mylast = col.find_one()
+retrievedate = col.find_one()["EndDate"]
+print(mylast)
+print(retrievedate)
+print("*****")
+for x in mydoc:
+  print(x)
+
+
 ### Creating hard code demo data:
 # dat1 = {"symbol": "TSLA", "StartDate": "2020-01-01", "EndDate": datetime.datetime .utcnow()}
-
 ### Accessing the collection by name:
 data = db.data
-
 ### In order to insert our mock data into the collection:
 # result = data.insert_one(dat1)
-
 ### Creating hard code demo data - more tham one object:
 # dat2 = [{"symbol": "TSLA", "StartDate": "2020-01-01", "EndDate": datetime.datetime.utcnow()},
 #         {"symbol": "APPL", "StartDate": "2021-01-01", "EndDate": datetime.datetime.utcnow()}]
-
 # result = data.insert_many(dat2)
 
 ### In order to retrive data, we implement find metods:
 ## To get the firs match:
-result = data.find_one()
-print(result)
+#result = data.find_one()
+#print(result)
 ## To retrive specific data:
-# result = data.find_one({"symbol": "TSLA"})
+#res = data.find_one({"symbol": "APPL"})
+#print(res)
+## To sort according to end date:
+#re = data.find().sort({"EndDate": -1})
+#print(re)
 
 
 symbol = 'TSLA'
@@ -48,21 +70,27 @@ tickerdata = ticker.history(start=start_time, end=end_time)
 print(tickerdata)
 print(end_time)
 print(start_time)
+#temp = datetime.timedelta('start_time', 'end_time')
 # df = pd.DataFrame({"tickerdata"})
 # df
-temp = pd.DataFrame.between_time('start_time', 'end_time')
-print(temp)
+#temp = pd.DataFrame.between_time('start_time', 'end_time')
+#print(temp)
 #filtering for last date in sort results:
-firstquary = db.data.findOne({'EndDate'})
-if db.data.count_documents({'symbol': "TSLA"}, limit=1) == 0:
-        print(ticker.history(temp))
-else:data.find().sort("EndDate", -1)
+#firstquary = db.data.findOne({'EndDate'})
+for x in db.data.find():
+#findsymbol = db['tset'].find({"symbol": "TSLA"}).count()
+    if db.data.count_documents({"symbol": "TSLA"})==0:
+#if db.data.count_documents({'symbol': "TSLA"}, limit=1) == 0:
+        print("4")
+else:
+    print(ticker.history(start=retrievedate, end=end_time))
+#else:data.find().sort("EndDate", -1)
 ## retrieve between_dates()
 # symbol_df = yf.download('symbol',
 #                       start='2019-01-01',
 #                       end=firstquary,
 #                       progress=False,)
-# print(symbol_df.head())
+# print(symbol_df.head())\]
 
 
 
