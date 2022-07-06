@@ -100,12 +100,13 @@ dataofnew = {
 dataoflists = {
     'StartDate': mylast["EndDate"],
     'EndDate': (end_time),
-    'Open': (ticker.history(start=retrievedate, end=end_time)["Open"]),
-    'High': 2,
-    'Low': 3,
-    'Close': 4,
-    'AdjClose': 5,
-    'Volume': 6,
+    'Date': [],
+    'Open': [],
+    'High': [],
+    'Low': [],
+    'Close': [],
+    'AdjClose': [],
+    'Volume': [],
     'Project_id': (symbol)
 }
 
