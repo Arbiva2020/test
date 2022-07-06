@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from yahoofinancials import YahooFinancials
 
 
-cluster = 'mongodb+srv://?????@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
+cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
 ### Accessing a database:
@@ -37,6 +37,8 @@ print(retrievedate)
 print("*****")
 for x in mydoc:
   print(x)
+
+print("********")
 
 
 ### Creating hard code demo data:
@@ -68,15 +70,50 @@ ticker = yf.Ticker(symbol)
 end_time = datetime.datetime.now()
 start_time = end_time - datetime.timedelta(days=365)
 tickerdata = ticker.history(start=retrievedate, end=end_time)
-print('*')
-print(tickerdata)
-print('*')
-### The schema according to which new document are being build:
-dataoflists = {'Date': [datetime.datetime.now()], 'Open': [0], 'High': [1], 'Low': [1], 'Close': [1], 'AdjClose': [1], 'Volume': [1], 'Project_id': [symbol]}
+#print('*')
+#print(tickerdata)
+#print('*')
+### The schema according to which new document are being build, that import data from yf:
+# dataoflists = {
+#                'Date': datetime.datetime.utcnow(),
+#                'Open': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Open']],
+#                'High': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['High']],
+#                'Low': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Low']],
+#                'Close': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Close']],
+#                #'AdjClose': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['AdjClose']],
+#                'Volume': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Volume']],
+#                'Project_id': symbol
+#                }
+
+dataofnew = {
+    'StartDate': (end_time)-datetime.timedelta(days=365),
+    'EndDate': (end_time),
+    'Open': [1],
+    'High': [2],
+    'Low': [3],
+    'Close': [4],
+    'AdjClose': [5],
+    'Volume': [6],
+    'Project_id': (symbol)
+}
+
+dataoflists = {
+    'StartDate': mylast["EndDate"],
+    'EndDate': (end_time),
+    'Open': (ticker.history(start=retrievedate, end=end_time)["Open"]),
+    'High': 2,
+    'Low': 3,
+    'Close': 4,
+    'AdjClose': 5,
+    'Volume': 6,
+    'Project_id': (symbol)
+}
+
+
 ### Inserting a new document following every search of symbol by client:
-x = col.insert_one(dataoflists)
-df = pd.DataFrame(dataoflists)
-print(df)
+#x = col.insert_one(dataoflists)
+#df = pd.DataFrame(dataoflists)
+#print(df)
 
 #print(tickerdata)
 #print(end_time)
@@ -90,9 +127,19 @@ print(df)
 #firstquary = db.data.findOne({'EndDate'})
 for x in db.data.find():
     if db.data.count_documents({"symbol": "TSLA"})==0:
-#if db.data.count_documents({'symbol': "TSLA"}, limit=1) == 0:
+        ## creation of object of **new** symbol in our mongodb:
+        x = col.insert_one(dataofnew)
+        dn = pd.DataFrame(dataofnew)
+        print(dn)
         print("DataFrame.empty")
 else:
+    ## creation of additional object of **excisting** symbol in our mongodb:
+    print('### what we store in the db:')
+    x = col.insert_one(dataoflists)
+    df = pd.DataFrame(dataoflists)
+    print(df)
+    ## print of output
+    print('### what we get straight from yf according to relevant dates:')
     print(ticker.history(start=retrievedate, end=end_time))
 
 
