@@ -3,7 +3,8 @@ import numpy as np
 import requests
 import multitasking
 import datetime
-#from pandas_datareader import data as pdr
+import pandas_datareader as dr
+from pandas_datareader import data as pdr
 import yfinance as yf
 yf.pdr_override()
 import pymongo as pym
@@ -11,6 +12,7 @@ from pymongo import MongoClient
 from yahoofinancials import YahooFinancials
 
 
+########################## Working with mongodb:################################
 cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
@@ -37,142 +39,102 @@ print(retrievedate)
 print("*****")
 for x in mydoc:
   print(x)
-
 print("********")
-
-
-### Creating hard code demo data:
-# dat1 = {"symbol": "TSLA", "StartDate": "2020-01-01", "EndDate": datetime.datetime .utcnow()}
 ### Accessing the collection by name:
 data = db.data
-### In order to insert our mock data into the collection:
-# result = data.insert_one(dat1)
-### Creating hard code demo data - more tham one object:
-# dat2 = [{"symbol": "TSLA", "StartDate": "2020-01-01", "EndDate": datetime.datetime.utcnow()},
-#         {"symbol": "APPL", "StartDate": "2021-01-01", "EndDate": datetime.datetime.utcnow()}]
-# result = data.insert_many(dat2)
-
-### In order to retrive data, we implement find metods:
-## To get the firs match:
-#result = data.find_one()
-#print(result)
-## To retrive specific data:
-#res = data.find_one({"symbol": "APPL"})
-#print(res)
-## To sort according to end date:
-#re = data.find().sort({"EndDate": -1})
-#print(re)
 
 
+########################## Working with yf and tickers:################################
 symbol = 'TSLA'
 ticker = yf.Ticker(symbol)
 #print(ticker.history())
 end_time = datetime.datetime.now()
 start_time = end_time - datetime.timedelta(days=365)
 tickerdata = ticker.history(start=retrievedate, end=end_time)
-#print('*')
-#print(tickerdata)
-#print('*')
-### The schema according to which new document are being build, that import data from yf:
-# dataoflists = {
-#                'Date': datetime.datetime.utcnow(),
-#                'Open': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Open']],
-#                'High': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['High']],
-#                'Low': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Low']],
-#                'Close': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Close']],
-#                #'AdjClose': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['AdjClose']],
-#                'Volume': [ticker.history(start="2022-07-01", end=datetime.datetime.utcnow(), frequency='1dy')['Volume']],
-#                'Project_id': symbol
-#                }
 
-dataofnew = {
-    'StartDate': (end_time)-datetime.timedelta(days=365),
-    'EndDate': (end_time),
-    'Open': [1],
-    'High': [2],
-    'Low': [3],
-    'Close': [4],
-    'AdjClose': [5],
-    'Volume': [6],
-    'Project_id': (symbol)
-}
-
-dataoflists = {
-    'StartDate': mylast["EndDate"],
-    'EndDate': (end_time),
-    'Date': [],
-    'Open': [],
-    'High': [],
-    'Low': [],
-    'Close': [],
-    'AdjClose': [],
-    'Volume': [],
-    'Project_id': (symbol)
-}
-
-
-### Inserting a new document following every search of symbol by client:
-#x = col.insert_one(dataoflists)
-#df = pd.DataFrame(dataoflists)
-#print(df)
-
-#print(tickerdata)
-#print(end_time)
-#print(start_time)
+########################## converting pdr to df:################################
+print('*')
+#df = dr.data.get_data_yahoo({symbol}, start=start_time, end=end_time)
+#df
+data1 = pdr.get_data_yahoo(symbol, start=start_time, end=end_time)  #for new queries, a year back
+data2 = pdr.get_data_yahoo(symbol, start=retrievedate, end=end_time)  #for existing symbols, starting last search ("end date")
+print(data1)
+data1.reset_index(inplace=True)
+data2.reset_index(inplace=True)# Reset Index
+data_dict = data1.to_dict("records")  # Convert to dictionary
+data_dict2 = data2.to_dict("records")
+print(data_dict)
+col.insert_one({"index": symbol, "data": data_dict})  # inesrt into DB
+col.insert_one({"index": symbol, "data": data_dict2})
+print('*')
+#dfall = pd.DataFrame(index=[], columns=['Date', 'Open', "High", 'Low', 'Close', 'Adj Close', 'Symbol'])
+#opendata = yf.Ticker(symbol).info.get('Open')
+#df = dfall.append(opendata)
+# stock_list = [{symbol}]
+# df_list = pd.DataFrame()
+# for stock in stock_list:
+#     df = yf.download(stock, start_time)
+#     df['stock'] = stock
+#     df_list = pd.concat([df_list, df], axis=0)
+#df_list.head()
 #temp = datetime.timedelta('start_time', 'end_time')
-# df = pd.DataFrame({"tickerdata"})
+#df = pd.DataFrame({"tickerdata"})
+#df.reset_index(level=0, inplace=True)
+#col.insert_many(df.to_dict('records'))
+#df.to_dict('records')
 # df
 #temp = pd.DataFrame.between_time('start_time', 'end_time')
 #print(temp)
-#filtering for last date in sort results:
+
+
+########################## Filtering for last date in sort results: ##########################
+
 #firstquary = db.data.findOne({'EndDate'})
 for x in db.data.find():
     if db.data.count_documents({"symbol": "TSLA"})==0:
         ## creation of object of **new** symbol in our mongodb:
-        x = col.insert_one(dataofnew)
-        dn = pd.DataFrame(dataofnew)
-        print(dn)
+        ## --here we create--
+        col.insert_one({"index": symbol, "data": data_dict})
         print("DataFrame.empty")
+
 else:
-    ## creation of additional object of **excisting** symbol in our mongodb:
+    ## creation of additional object of **excisting** symbol in our mongodb - updating with upset:
     print('### what we store in the db:')
-    x = col.insert_one(dataoflists)
-    df = pd.DataFrame(dataoflists)
-    print(df)
+    col.insert_one({"index": symbol, "data": data_dict2})
+
     ## print of output
     print('### what we get straight from yf according to relevant dates:')
     print(ticker.history(start=retrievedate, end=end_time))
 
 
+# dictionary --> date
+# title --> key and then value
+def write_signals_to_mongo(df, selectors, col, upsert=False):
+    """
+        Writes a DataFrame into a MongoDB collection
+        if upsert then it will update existing records else mongo will append new data into the collection
+    """
+    #The iterrows() method generates an iterator object of the DataFrame, allowing us to iterate each row
+    #in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object).
+
+    if (upsert == True):
+        for _, row in df.iterrows():
+            selector = {
+                selectors[0]: row[selectors[0]],
+                selectors[1]: row[selectors[1]],
+            }
+            update = {"$set":  row.to_dict()}
+
+            col.update_one(selector, update, upsert=True)
+    else:
+        col.insert_many(df.to_dict('records'))
 
 
-
-#else:data.find().sort("EndDate", -1)
-## retrieve between_dates()
-# symbol_df = yf.download('symbol',
-#                       start='2019-01-01',
-#                       end=firstquary,
-#                       progress=False,)
-# print(symbol_df.head())\]
-### Creating a database
-# mydb = client["test"]
-#creating a collection
-# data_table = mydb["data"]
-
-#If this is the first quary for this specific symbol:
-# end = dt.datetime.now()
-# start = end - dt.timedelta(days=365)
-# start, end
-#Creating a Ticker obgect - this object suppose to get what the client is inputing as 'SYMBOL'
-# symbol = 'TSLA'
-# ticker = yf.Ticker(symbol)
-#When we whant to view stock history (can get parameters as "max" and so on)
-# print(ticker.history())
-# database.create_collection("data")
-# client = pymongo.MongoClient('mongodb://localhost:27017')
-# tsla_df = yf.download('TSLA',
-#                       start='2019-01-01',
-#                       end='2021-06-12',
-#                       progress=False,
-# )
-# print(tsla_df.head())
+        ### creation of unit tests for the following scenarios:
+        # 1) inserting a large amount of data at once
+        # 2) trying to update a key that does not exist
+        # 3) searching for a type-o symbol
+        # 4) searching without inserting a symbol
+        # 5) inserting the wrong type of data as search input
+        # 6) searching for more than one symbol
+        # 7)
