@@ -13,7 +13,7 @@ from yahoofinancials import YahooFinancials
 
 
 ########################## Working with mongodb:################################
-cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
+cluster = 'mongodb+srv://arbiva:?????@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
 ### Accessing a database:
