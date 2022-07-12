@@ -113,7 +113,8 @@ else:
     print('### what we store in the db:')
     #col.insert_one({"index": symbol, "data": data_dict2})
     for x in data_dict2:
-        col.insert_one(x)
+        #col.insert_one(x)
+        col.insert_one({"index": symbol, "data": x})
         print(x)
     #col.insert_one({"index": symbol, "data": data_dict2})
 
