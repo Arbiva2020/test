@@ -13,7 +13,7 @@ from yahoofinancials import YahooFinancials
 
 
 ########################## Working with mongodb:################################
-cluster = 'mongodb+srv://arbiva:?????@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
+cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
 ### Accessing a database:
@@ -63,9 +63,20 @@ data1.reset_index(inplace=True)
 data2.reset_index(inplace=True)# Reset Index
 data_dict = data1.to_dict("records")  # Convert to dictionary
 data_dict2 = data2.to_dict("records")
-print(data_dict)
-col.insert_one({"index": symbol, "data": data_dict})  # inesrt into DB
-col.insert_one({"index": symbol, "data": data_dict2})
+
+print('**')
+for x in data_dict2:
+    print(x)
+print('**')
+
+print('***')
+print(data_dict2)
+print('***')
+print(type(data2))
+print(type(data_dict2))
+
+#col.insert_one({"index": symbol, "data": data_dict})  # inesrt into DB
+#col.insert_one({"index": symbol, "data": data_dict2})
 print('*')
 #dfall = pd.DataFrame(index=[], columns=['Date', 'Open', "High", 'Low', 'Close', 'Adj Close', 'Symbol'])
 #opendata = yf.Ticker(symbol).info.get('Open')
@@ -100,7 +111,11 @@ for x in db.data.find():
 else:
     ## creation of additional object of **excisting** symbol in our mongodb - updating with upset:
     print('### what we store in the db:')
-    col.insert_one({"index": symbol, "data": data_dict2})
+    #col.insert_one({"index": symbol, "data": data_dict2})
+    for x in data_dict2:
+        col.insert_one(x)
+        print(x)
+    #col.insert_one({"index": symbol, "data": data_dict2})
 
     ## print of output
     print('### what we get straight from yf according to relevant dates:')
@@ -109,32 +124,33 @@ else:
 
 # dictionary --> date
 # title --> key and then value
-def write_signals_to_mongo(df, selectors, col, upsert=False):
-    """
-        Writes a DataFrame into a MongoDB collection
-        if upsert then it will update existing records else mongo will append new data into the collection
-    """
+
+# def write_signals_to_mongo(df, selectors, col, upsert=False):
+#     """
+#         Writes a DataFrame into a MongoDB collection
+#         if upsert then it will update existing records else mongo will append new data into the collection
+#     """
     #The iterrows() method generates an iterator object of the DataFrame, allowing us to iterate each row
     #in the DataFrame. Each iteration produces an index object and a row object (a Pandas Series object).
 
-    if (upsert == True):
-        for _, row in df.iterrows():
-            selector = {
-                selectors[0]: row[selectors[0]],
-                selectors[1]: row[selectors[1]],
-            }
-            update = {"$set":  row.to_dict()}
+    # if (upsert == True):
+    #     for _, row in df.iterrows():
+    #         selector = {
+    #             selectors[0]: row[selectors[0]],
+    #             selectors[1]: row[selectors[1]],
+    #         }
+    #         update = {"$set":  row.to_dict()}
+    #
+    #         col.update_one(selector, update, upsert=True)
+    # else:
+    #     col.insert_many(df.to_dict('records'))
 
-            col.update_one(selector, update, upsert=True)
-    else:
-        col.insert_many(df.to_dict('records'))
 
-
-        ### creation of unit tests for the following scenarios:
+        ########################## creation of unit tests for the following scenarios: ##########################
         # 1) inserting a large amount of data at once
         # 2) trying to update a key that does not exist
         # 3) searching for a type-o symbol
         # 4) searching without inserting a symbol
         # 5) inserting the wrong type of data as search input
         # 6) searching for more than one symbol
-        # 7)
+        # 7) 
