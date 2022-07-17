@@ -13,7 +13,7 @@ from yahoofinancials import YahooFinancials
 
 
 ########################## Working with mongodb:################################
-cluster = 'mongodb+srv://arbiva:????@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
+cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
 
@@ -49,7 +49,7 @@ print("********")
 data = db.data
 
 ########################## deleting documents of the same attribute (in this case, index) from db: #################
-query = {"index":"TSLA"}
+query = {"index": "TSLA"}
 d = col.delete_many(query)
 
 ########################## Working with yf and tickers: ################################
@@ -73,6 +73,8 @@ data2.reset_index(inplace=True)# Reset Index
 ################## assigning symbol_id into the pdr (dataFrame) ###################
 print("##")
 df = data2.assign(project_id="symbol")
+# another way to open a new column:
+df["project_id"] = "symbol"
 print(df)
 print('##')
 
@@ -86,13 +88,15 @@ print('***')
 print('***')
 # print(type(data2))
 # print(type(data_dict2))
-
-
+dic = df.to_dict('records')
+print(dic)
+print(type(dic))
+print(type(df))
 ########################## Filtering for last date in sort results: ##########################
 
 
 for x in db.data.find():
-    if db.data.count_documents({"symbol": "TSLA"})==0:
+    if db.data.count_documents({"symbol": "TSLA"}) == 0:
         col.insert_many(df.to_dict('records'))
         print("DataFrame.empty")
 
@@ -100,17 +104,16 @@ else:
     ## creation of additional object of **excisting** symbol in our mongodb - updating with upset:
     print('### what we store in the db:')
     #col.insert_one({"index": symbol, "data": data_dict2})
-    for x in df:
-        col.insert_many(df.to_dict('records'))
-
-
+    #for x in df:
+    col.insert_many(df.to_dict('records'))
+        #col.insert_one(df.to_dict('records'))
+    # dict=df.to_dict('dict')
+    # col.insert_one(dict)
+    # dict1 = df.set_index("Date").T.to_dict('list')
+    # col.insert_one(dict1)
     ## print of output
     print('### what we get straight from yf according to relevant dates:')
     print(ticker.history(start=retrievedate, end=end_time))
-
-
-
-
 
 
         ########################## creation of unit tests for the following scenarios: ##########################
