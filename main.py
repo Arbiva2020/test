@@ -13,7 +13,7 @@ from yahoofinancials import YahooFinancials
 
 
 ########################## Working with mongodb:################################
-cluster = 'mongodb+srv://arbiva:Adi101010@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
+cluster = 'mongodb+srv://arbiva:????@cluster0.86nym.mongodb.net/test?retryWrites=true&w=majority'
 client = MongoClient(cluster)
 print(client.list_database_names())
 
@@ -103,15 +103,9 @@ for x in db.data.find():
 else:
     ## creation of additional object of **excisting** symbol in our mongodb - updating with upset:
     print('### what we store in the db:')
-    #col.insert_one({"index": symbol, "data": data_dict2})
     #for x in df:
     col.insert_many(df.to_dict('records'))
         #col.insert_one(df.to_dict('records'))
-    # dict=df.to_dict('dict')
-    # col.insert_one(dict)
-    # dict1 = df.set_index("Date").T.to_dict('list')
-    # col.insert_one(dict1)
-    ## print of output
     print('### what we get straight from yf according to relevant dates:')
     print(ticker.history(start=retrievedate, end=end_time))
 
